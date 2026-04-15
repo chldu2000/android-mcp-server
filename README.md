@@ -2,6 +2,8 @@
 
 An MCP (Model Context Protocol) server that provides ADB and scrcpy capabilities for controlling Android devices. Built with FastMCP.
 
+Assisted by Minimax Model via Claude Code.
+
 ## Features
 
 - **Device Management**: List devices, get device info
