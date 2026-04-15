@@ -35,6 +35,7 @@ from android_mcp.tools.screen import (
     scrcpy_screenshot as _scrcpy_screenshot,
     scrcpy_control as _scrcpy_control,
 )
+from android_mcp.tools.ui import adb_dump_ui_tree as _adb_dump_ui_tree
 
 
 mcp = FastMCP("android-mcp-server")
@@ -171,6 +172,13 @@ async def scrcpy_screenshot(serial: str, output_path: str = "/sdcard/screenshot.
 async def scrcpy_control(serial: str, action: str, params: dict):
     """Send control command to scrcpy."""
     return await _scrcpy_control(serial, action, params)
+
+
+# UI tools
+@mcp.tool()
+async def adb_dump_ui_tree(serial: str):
+    """Dump the UI hierarchy tree from the device."""
+    return await _adb_dump_ui_tree(serial)
 
 
 if __name__ == "__main__":
