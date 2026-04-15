@@ -209,6 +209,56 @@ async def netstat(serial: Optional[str] = None) -> Dict[str, Any]:
         return {"error": str(e)}
 
 
+async def dump_ui_tree(serial: Optional[str] = None) -> Dict[str, Any]:
+    """Dump the UI hierarchy tree of the current screen.
+
+    Uses uiautomator to dump the view hierarchy as XML.
+
+    Args:
+        serial: Device serial (uses active device if not specified)
+
+    Returns:
+        UI tree as XML string
+    """
+    device = _get_device(serial)
+    if not device:
+        return {"error": "No device available"}
+
+    try:
+        import tempfile
+        import os
+
+        device_path = "/sdcard/ui_dump.xml"
+        device.client.shell(f"uiautomator dump {device_path}")
+
+        # Pull the file
+        with tempfile.NamedTemporaryFile(suffix=".xml", delete=False) as f:
+            local_path = f.name
+
+        try:
+            device.client.shell(f"cat {device_path}")  # Ensure file exists
+            stdout, stderr, returncode = device._run(["pull", device_path, local_path]) if hasattr(device, '_run') else ("", "", 1)
+
+            # Alternative: directly read from shell
+            if returncode != 0:
+                xml_content = device.client.shell(f"cat {device_path}")
+            else:
+                with open(local_path, "r") as f:
+                    xml_content = f.read()
+
+            return {
+                "success": True,
+                "format": "xml",
+                "xml": xml_content,
+            }
+        finally:
+            if os.path.exists(local_path):
+                os.unlink(local_path)
+            device.client.shell(f"rm {device_path}")
+    except ADBError as e:
+        return {"error": str(e)}
+
+
 def _get_device(serial: Optional[str]) -> Optional[Any]:
     """Get a device by serial or return the active device."""
     if serial:

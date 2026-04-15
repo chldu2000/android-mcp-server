@@ -169,6 +169,16 @@ def create_mcp_server() -> FastMCP:
         """Get network statistics."""
         return await system_tools.netstat(serial)
 
+    @mcp.tool()
+    async def adb_dump_ui_tree(serial: Optional[str] = None):
+        """Dump the UI hierarchy tree of the current screen.
+
+        Uses uiautomator to dump the view hierarchy as XML.
+        Returns the UI tree structure which can be parsed to understand
+        the current screen layout and elements.
+        """
+        return await system_tools.dump_ui_tree(serial)
+
     # Register screen tools
     @mcp.tool()
     async def adb_screencap(serial: Optional[str] = None):
