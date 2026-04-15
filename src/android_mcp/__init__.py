@@ -1,0 +1,1 @@
+"""Android MCP Server - Control Android devices via ADB and scrcpy."""
