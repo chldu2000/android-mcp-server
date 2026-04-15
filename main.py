@@ -1,0 +1,6 @@
+"""Entry point for the Android MCP Server."""
+
+from android_mcp_server.main import main
+
+if __name__ == "__main__":
+    main()
