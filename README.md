@@ -26,7 +26,7 @@ uv sync
 ### Claude Code
 
 ```bash
-claude mcp add android uv run -- python -m android_mcp.main --cwd /Users/chldu/Workspace/android-mcp-server
+claude mcp add android uv run -- python -m android_mcp.main --cwd /Path/to/android-mcp-server
 ```
 
 ### Other MCP Clients
