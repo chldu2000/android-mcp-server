@@ -30,6 +30,21 @@ class ADBClient:
             raise RuntimeError(f"ADB command failed: {result.stderr}")
         return result.stdout.strip()
 
+    def _run_command_raw(self, args: list[str]) -> bytes:
+        """Run an ADB command and return raw binary output."""
+        cmd = [self._adb_path] + args
+        try:
+            result = subprocess.run(cmd, capture_output=True)
+        except FileNotFoundError:
+            raise RuntimeError(f"ADB command not found. Please ensure 'adb' is installed and in your PATH.")
+        except PermissionError as e:
+            raise RuntimeError(f"Permission denied when running ADB command: {e}")
+        except OSError as e:
+            raise RuntimeError(f"OS error when running ADB command: {e}")
+        if result.returncode != 0:
+            raise RuntimeError(f"ADB command failed: {result.stderr}")
+        return result.stdout
+
     def list_devices(self) -> list[dict[str, str]]:
         """List all connected devices."""
         output = self._run_command(["devices", "-l"])
@@ -66,6 +81,11 @@ class ADBClient:
         """Execute shell command on device."""
         self._validate_serial(serial)
         return self._run_command(["-s", serial, "shell", command])
+
+    def exec_out(self, serial: str, command: str) -> bytes:
+        """Execute command via exec-out on device (for binary output like screencap)."""
+        self._validate_serial(serial)
+        return self._run_command_raw(["-s", serial, "exec-out", command])
 
     def install(self, serial: str, apk_path: str) -> str:
         """Install an APK on the device."""

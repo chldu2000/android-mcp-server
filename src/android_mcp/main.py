@@ -17,7 +17,7 @@ from android_mcp.tools.file import (
     adb_pull_file as _adb_pull_file,
     adb_push_file as _adb_push_file,
 )
-from android_mcp.tools.shell import adb_shell as _adb_shell
+from android_mcp.tools.shell import adb_shell as _adb_shell, adb_exec_out as _adb_exec_out
 from android_mcp.tools.input import (
     adb_tap as _adb_tap,
     adb_swipe as _adb_swipe,
@@ -34,8 +34,9 @@ from android_mcp.tools.screen import (
     scrcpy_stop as _scrcpy_stop,
     scrcpy_screenshot as _scrcpy_screenshot,
     scrcpy_control as _scrcpy_control,
+    adb_screencap as _adb_screencap,
 )
-from android_mcp.tools.ui import adb_dump_ui_tree as _adb_dump_ui_tree
+from android_mcp.tools.ui import adb_dump_ui_tree as _adb_dump_ui_tree, adb_find_element as _adb_find_element
 
 
 mcp = FastMCP("android-mcp-server")
@@ -103,6 +104,12 @@ async def adb_push_file(serial: str, local_path: str, device_path: str):
 async def adb_shell(serial: str, command: str):
     """Execute a shell command on the device."""
     return await _adb_shell(serial, command)
+
+
+@mcp.tool()
+async def adb_exec_out(serial: str, command: str):
+    """Execute a command via adb exec-out (for binary output)."""
+    return await _adb_exec_out(serial, command)
 
 
 # Input control tools
@@ -174,11 +181,32 @@ async def scrcpy_control(serial: str, action: str, params: dict):
     return await _scrcpy_control(serial, action, params)
 
 
+@mcp.tool()
+async def adb_screencap(serial: str, output_path: str):
+    """Capture screenshot using exec-out and save to local file."""
+    return await _adb_screencap(serial, output_path)
+
+
 # UI tools
 @mcp.tool()
 async def adb_dump_ui_tree(serial: str):
     """Dump the UI hierarchy tree from the device."""
     return await _adb_dump_ui_tree(serial)
+
+
+@mcp.tool()
+async def adb_find_element(
+    serial: str,
+    resource_id: str = None,
+    text: str = None,
+    content_desc: str = None,
+    class_name: str = None,
+    enabled: bool = None,
+    clickable: bool = None,
+    focusable: bool = None,
+):
+    """Find UI elements by their attributes using uiautomator."""
+    return await _adb_find_element(serial, resource_id, text, content_desc, class_name, enabled, clickable, focusable)
 
 
 if __name__ == "__main__":

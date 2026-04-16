@@ -9,10 +9,11 @@ Assisted by Minimax Model via Claude Code.
 - **Device Management**: List devices, get device info
 - **App Management**: Install/uninstall apps, start/stop apps, list packages
 - **File Operations**: Push/pull files between device and host
-- **Shell Execution**: Run shell commands on device
+- **Shell Execution**: Run shell commands on device, exec-out for binary output
 - **Input Control**: Tap, swipe, input text, press keys
 - **System Info**: Screen size, battery status, system properties
-- **Screen Control**: Screen mirroring and control via scrcpy
+- **Screen Control**: Screen mirroring and control via scrcpy, screenshot via exec-out
+- **UI Element Finding**: Dump UI hierarchy, find elements by attributes
 
 ## Setup
 
@@ -74,6 +75,7 @@ python -m android_mcp.main
 | Tool | Description |
 |------|-------------|
 | `adb_shell` | Execute shell command |
+| `adb_exec_out` | Execute command via exec-out (for binary output) |
 
 ### Input Control
 
@@ -100,6 +102,14 @@ python -m android_mcp.main
 | `scrcpy_stop` | Stop screen mirroring |
 | `scrcpy_screenshot` | Take screenshot |
 | `scrcpy_control` | Send control command |
+| `adb_screencap` | Capture screenshot via exec-out |
+
+### UI Elements
+
+| Tool | Description |
+|------|-------------|
+| `adb_dump_ui_tree` | Dump UI hierarchy tree |
+| `adb_find_element` | Find UI elements by attributes |
 
 ## Device Connection
 
@@ -129,5 +139,4 @@ For TCP/IP connection:
 ## Dependencies
 
 - [fastmcp](https://github.com/jlowin/fastmcp) - MCP server framework
-- [adb-shell](https://github.com/roticv/adb-shell) - ADB protocol library
 - [scrcpy](https://github.com/Genymobile/scrcpy) - Screen mirroring (must be installed separately)

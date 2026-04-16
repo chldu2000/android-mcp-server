@@ -1,8 +1,10 @@
 """Screen control tools using scrcpy for MCP."""
 
+import os
 from typing import Any
 from android_mcp.scrcpy.client import ScrcpyClient
 from android_mcp.scrcpy.control import ScrcpyControl
+from android_mcp.tools.device import get_adb_client
 
 
 # Global scrcpy client instance
@@ -96,3 +98,27 @@ async def scrcpy_control(
         return await adb_input_text(serial, text)
 
     return f"Unknown action: {action}"
+
+
+async def adb_screencap(serial: str, output_path: str) -> str:
+    """Capture screenshot using exec-out and save to local file.
+
+    Uses 'adb exec-out screencap -p' to get raw PNG data, which is more
+    reliable than going through the device filesystem.
+
+    Args:
+        serial: Device serial number
+        output_path: Local path to save the PNG screenshot
+
+    Returns:
+        Path to the saved screenshot file.
+    """
+    client = get_adb_client()
+    # Use exec-out to get raw screenshot data
+    image_data = client.exec_out(serial, "screencap -p")
+
+    # Write the binary data to the output file
+    with open(output_path, "wb") as f:
+        f.write(image_data)
+
+    return output_path
