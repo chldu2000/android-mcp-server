@@ -24,6 +24,17 @@ class Uiautomator2Device:
         return self.device.dump_hierarchy()
 
 
+# Global uiautomator2 device cache
+_u2_devices: dict[str, Uiautomator2Device] = {}
+
+
+def get_u2_device(serial: str) -> Uiautomator2Device:
+    """Get or create a Uiautomator2Device for the given serial."""
+    if serial not in _u2_devices:
+        _u2_devices[serial] = Uiautomator2Device(serial)
+    return _u2_devices[serial]
+
+
 async def adb_dump_ui_tree(serial: str) -> str:
     """Dump the UI hierarchy tree from the device.
 
