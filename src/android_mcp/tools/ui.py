@@ -38,7 +38,8 @@ def get_u2_device(serial: str) -> Uiautomator2Device:
 async def adb_dump_ui_tree(serial: str) -> str:
     """Dump the UI hierarchy tree from the device.
 
-    Uses uiautomator to dump the current UI hierarchy as XML.
+    Uses uiautomator2 to dump the current UI hierarchy as XML,
+    with fallback to ADB shell uiautomator dump on failure.
 
     Args:
         serial: Device serial number
@@ -46,15 +47,18 @@ async def adb_dump_ui_tree(serial: str) -> str:
     Returns:
         UI hierarchy XML string.
     """
-    client = get_adb_client()
-    # uiautomator dump writes to /sdcard/window_dump.xml by default
-    # First, dump the UI hierarchy
-    client.shell(serial, "uiautomator dump /sdcard/window_dump.xml")
-    # Then read the file content directly
-    output = client.shell(serial, "cat /sdcard/window_dump.xml")
-    # Clean up the dumped file
-    client.shell(serial, "rm /sdcard/window_dump.xml")
-    return output
+    try:
+        u2_dev = get_u2_device(serial)
+        return u2_dev.dump_hierarchy()
+    except Exception as e:
+        import logging
+        logging.warning(f"uiautomator2 failed, falling back to ADB: {e}")
+        # Fallback to original ADB method
+        client = get_adb_client()
+        client.shell(serial, "uiautomator dump /sdcard/window_dump.xml")
+        output = client.shell(serial, "cat /sdcard/window_dump.xml")
+        client.shell(serial, "rm /sdcard/window_dump.xml")
+        return output
 
 
 def _parse_bounds(bounds_str: str) -> dict[str, int]:
