@@ -134,9 +134,8 @@ async def adb_find_element(
 ) -> list[dict[str, Any]]:
     """Find UI elements by their attributes.
 
-    Uses uiautomator to dump the UI hierarchy and finds elements matching
-    all provided criteria (AND matching). If no criteria are provided,
-    returns an empty list.
+    Uses uiautomator2 selectors with fallback to ADB uiautomator dump.
+    All provided criteria must match (AND logic).
 
     Args:
         serial: Device serial number
@@ -151,13 +150,89 @@ async def adb_find_element(
     Returns:
         List of matching elements with their attributes and available actions.
     """
-    # If no criteria provided, return empty list
     if all(p is None for p in [resource_id, text, content_desc, class_name, enabled, clickable, focusable]):
         return []
 
-    client = get_adb_client()
+    try:
+        u2_dev = get_u2_device(serial)
+        return _u2_find_element_impl(u2_dev, resource_id, text, content_desc, class_name, enabled, clickable, focusable)
+    except Exception as e:
+        import logging
+        logging.warning(f"uiautomator2 failed in find_element, falling back to ADB: {e}")
+        return _adb_find_element_impl(serial, resource_id, text, content_desc, class_name, enabled, clickable, focusable)
 
-    # Dump UI hierarchy
+
+def _u2_find_element_impl(
+    u2_dev: Uiautomator2Device,
+    resource_id: str = None,
+    text: str = None,
+    content_desc: str = None,
+    class_name: str = None,
+    enabled: bool = None,
+    clickable: bool = None,
+    focusable: bool = None,
+) -> list[dict[str, Any]]:
+    """Find elements using uiautomator2 selectors."""
+    device = u2_dev.device
+
+    # Build selector chain
+    if resource_id is not None:
+        device = device(resourceId=resource_id)
+    if text is not None:
+        device = device(text=text)
+    if content_desc is not None:
+        device = device(description=content_desc)
+    if class_name is not None:
+        device = device(className=class_name)
+    if enabled is not None:
+        device = device(enabled=enabled)
+    if clickable is not None:
+        device = device(clickable=clickable)
+    if focusable is not None:
+        device = device(focusable=focusable)
+
+    # Get all matching elements
+    elements = device.all()
+    results = []
+
+    for elem in elements:
+        bounds = elem.bounds()
+        attrs = {
+            "resource_id": elem.attrib.get("resourceId"),
+            "text": elem.attrib.get("text"),
+            "content_desc": elem.attrib.get("content-desc"),
+            "class": elem.attrib.get("class"),
+            "bounds": {"x": bounds[0], "y": bounds[1], "width": bounds[2] - bounds[0], "height": bounds[3] - bounds[1]},
+            "enabled": elem.attrib.get("enabled") == "true",
+            "clickable": elem.attrib.get("clickable") == "true",
+            "long_clickable": elem.attrib.get("long-clickable") == "true",
+            "focusable": elem.attrib.get("focusable") == "true",
+        }
+        actions = []
+        if bounds:
+            actions.append("tap")
+        if attrs.get("clickable"):
+            actions.append("click")
+        if attrs.get("long_clickable"):
+            actions.append("long_click")
+        attrs["actions"] = actions
+        results.append(attrs)
+
+    return results
+
+
+def _adb_find_element_impl(
+    serial: str,
+    resource_id: str = None,
+    text: str = None,
+    content_desc: str = None,
+    class_name: str = None,
+    enabled: bool = None,
+    clickable: bool = None,
+    focusable: bool = None,
+) -> list[dict[str, Any]]:
+    """Find elements using ADB uiautomator dump (fallback)."""
+    client = get_adb_client()
     client.shell(serial, "uiautomator dump /sdcard/window_dump.xml")
     xml_content = client.shell(serial, "cat /sdcard/window_dump.xml")
     client.shell(serial, "rm /sdcard/window_dump.xml")
@@ -165,8 +240,6 @@ async def adb_find_element(
     if not xml_content or not xml_content.strip():
         return []
 
-    # Parse XML to find nodes with attributes
-    # Each node line starts with '  <node' and contains various attributes
     node_pattern = re.compile(r'<node\s+(.*?)(?:/>|>)', re.DOTALL)
     results = []
 
@@ -174,36 +247,21 @@ async def adb_find_element(
         node_attrs_str = match.group(1)
         attrs = _parse_node_attributes(node_attrs_str)
 
-        # Apply AND matching - element must match all provided criteria
-        if resource_id is not None:
-            if attrs.get("resource_id") != resource_id:
-                continue
+        if resource_id is not None and attrs.get("resource_id") != resource_id:
+            continue
+        if text is not None and attrs.get("text") != text:
+            continue
+        if content_desc is not None and attrs.get("content_desc") != content_desc:
+            continue
+        if class_name is not None and attrs.get("class") != class_name:
+            continue
+        if enabled is not None and attrs.get("enabled") != enabled:
+            continue
+        if clickable is not None and attrs.get("clickable") != clickable:
+            continue
+        if focusable is not None and attrs.get("focusable") != focusable:
+            continue
 
-        if text is not None:
-            if attrs.get("text") != text:
-                continue
-
-        if content_desc is not None:
-            if attrs.get("content_desc") != content_desc:
-                continue
-
-        if class_name is not None:
-            if attrs.get("class") != class_name:
-                continue
-
-        if enabled is not None:
-            if attrs.get("enabled") != enabled:
-                continue
-
-        if clickable is not None:
-            if attrs.get("clickable") != clickable:
-                continue
-
-        if focusable is not None:
-            if attrs.get("focusable") != focusable:
-                continue
-
-        # Element matches all criteria - build result
         element = {
             "resource_id": attrs.get("resource_id"),
             "text": attrs.get("text"),
@@ -216,7 +274,6 @@ async def adb_find_element(
             "focusable": attrs.get("focusable"),
             "actions": _get_element_actions(attrs),
         }
-
         results.append(element)
 
     return results
