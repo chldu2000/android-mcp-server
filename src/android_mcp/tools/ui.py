@@ -4,6 +4,25 @@ import re
 from typing import Any
 from android_mcp.tools.device import get_adb_client
 
+class Uiautomator2Device:
+    """Wrapper for uiautomator2 device connection with lazy initialization."""
+
+    def __init__(self, serial: str):
+        self.serial = serial
+        self._device = None
+
+    @property
+    def device(self):
+        """Lazily connect to device via uiautomator2."""
+        if self._device is None:
+            import uiautomator2 as u2
+            self._device = u2.connect(self.serial)
+        return self._device
+
+    def dump_hierarchy(self) -> str:
+        """Dump UI hierarchy as XML string."""
+        return self.device.dump_hierarchy()
+
 
 async def adb_dump_ui_tree(serial: str) -> str:
     """Dump the UI hierarchy tree from the device.
