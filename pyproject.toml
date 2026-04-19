@@ -5,6 +5,7 @@ description = "MCP Server for Android device control via ADB and scrcpy"
 requires-python = ">=3.10"
 dependencies = [
     "fastmcp>=0.1.0",
+    "uiautomator2>=2.3.0",
 ]
 
 [project.optional-dependencies]
