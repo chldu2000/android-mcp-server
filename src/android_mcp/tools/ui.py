@@ -191,22 +191,22 @@ def _u2_find_element_impl(
     if focusable is not None:
         device = device(focusable=focusable)
 
-    # Get all matching elements
-    elements = device.all()
+    # Get all matching elements by iterating over the UiObject
     results = []
 
-    for elem in elements:
+    for elem in device:
+        info = elem.info
         bounds = elem.bounds()
         attrs = {
-            "resource_id": elem.attrib.get("resourceId"),
-            "text": elem.attrib.get("text"),
-            "content_desc": elem.attrib.get("content-desc"),
-            "class": elem.attrib.get("class"),
+            "resource_id": info.get("resourceName"),
+            "text": info.get("text"),
+            "content_desc": info.get("contentDesc"),
+            "class": info.get("className"),
             "bounds": {"x": bounds[0], "y": bounds[1], "width": bounds[2] - bounds[0], "height": bounds[3] - bounds[1]},
-            "enabled": elem.attrib.get("enabled") == "true",
-            "clickable": elem.attrib.get("clickable") == "true",
-            "long_clickable": elem.attrib.get("long-clickable") == "true",
-            "focusable": elem.attrib.get("focusable") == "true",
+            "enabled": info.get("enabled"),
+            "clickable": info.get("clickable"),
+            "long_clickable": info.get("longClickable"),
+            "focusable": info.get("focusable"),
         }
         actions = []
         if bounds:

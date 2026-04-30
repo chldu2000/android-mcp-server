@@ -140,3 +140,4 @@ For TCP/IP connection:
 
 - [fastmcp](https://github.com/jlowin/fastmcp) - MCP server framework
 - [scrcpy](https://github.com/Genymobile/scrcpy) - Screen mirroring (must be installed separately)
+- [uiautomator2](https://github.com/openatx/uiautomator2) - uiautomator2 Python wrapper
