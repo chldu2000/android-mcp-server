@@ -1,8 +1,8 @@
 # Android MCP Server
 
-An MCP (Model Context Protocol) server that provides ADB and scrcpy capabilities for controlling Android devices. Built with FastMCP.
+MCP server providing ADB and scrcpy capabilities for Android device control. Built with FastMCP.
 
-Assisted by Minimax Model via Claude Code.
+*Assisted by Minimax Model via Claude Code.*
 
 ## Features
 
@@ -15,10 +15,20 @@ Assisted by Minimax Model via Claude Code.
 - **Screen Control**: Screen mirroring and control via scrcpy, screenshot via exec-out
 - **UI Element Finding**: Dump UI hierarchy, find elements by attributes
 
-## Setup
+## Install
 
 ```bash
-uv sync
+uv add android-mcp-server
+```
+
+Or install from source:
+
+```bash
+# Clone the repo, then install
+git clone https://github.com/chldu2000/android-mcp-server.git
+cd android-mcp-server
+uv pip install -e .
+uv run python -m android_mcp.main
 ```
 
 ## Add MCP Server
@@ -26,7 +36,7 @@ uv sync
 ### Claude Code
 
 ```bash
-claude mcp add android uv run -- python -m android_mcp.main --cwd /Path/to/android-mcp-server
+claude mcp add android uv run -- python -m android_mcp.main --cwd /Path/to/workdir
 ```
 
 ### Other MCP Clients
@@ -35,13 +45,6 @@ The server can be run with:
 
 ```bash
 uv run python -m android_mcp.main
-```
-
-Or install as a package:
-
-```bash
-uv pip install -e .
-python -m android_mcp.main
 ```
 
 ## Tools
